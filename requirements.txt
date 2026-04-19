@@ -1,0 +1,6 @@
+slack-bolt
+flask
+openai
+google-api-python-client
+google-auth
+gunicorn
