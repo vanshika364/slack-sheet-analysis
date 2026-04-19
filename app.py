@@ -55,15 +55,21 @@ def append_to_sheet(row):
 
 # ---------------- SLACK HANDLER ----------------
 @slack_app.message("")
-def handle_mention(event, say):
+def handle_mention(event, say, logger):
+    logger.info("🔥 APP MENTION TRIGGERED")
+
     text = event.get("text")
-    user = event.get("user")
+    logger.info(f"TEXT: {text}")
 
-    ai_reply = ask_openai(text)
+    try:
+        ai_reply = ask_openai(text)
+        logger.info("OPENAI SUCCESS")
 
-    say(ai_reply)
+        say(ai_reply)
 
-    append_to_sheet([user, text, ai_reply])
+    except Exception as e:
+        logger.error(f"ERROR: {e}")
+        say("⚠️ Bot error occurred")
 
 # ---------------- ROUTE ----------------
 @flask_app.route("/slack/events", methods=["POST"])
