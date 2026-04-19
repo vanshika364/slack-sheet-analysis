@@ -72,6 +72,10 @@ def handle_mention(event, say, logger):
         say("⚠️ Bot error occurred")
 
 # ---------------- ROUTE ----------------
+@flask_app.route("/", methods=["GET"])
+def home():
+    return "BOT IS LIVE"
+
 @flask_app.route("/slack/events", methods=["POST"])
 def slack_events():
     return handler.handle(request)
