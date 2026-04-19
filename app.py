@@ -55,17 +55,14 @@ def append_to_sheet(row):
 
 # ---------------- SLACK HANDLER ----------------
 @slack_app.message("")
-def handle_message(message, say):
-    user = message.get("user")
-    text = message.get("text")
+def handle_mention(event, say):
+    text = event.get("text")
+    user = event.get("user")
 
-    # OpenAI response
     ai_reply = ask_openai(text)
 
-    # Reply in Slack
     say(ai_reply)
 
-    # Save to Sheets
     append_to_sheet([user, text, ai_reply])
 
 # ---------------- ROUTE ----------------
