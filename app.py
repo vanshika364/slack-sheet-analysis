@@ -128,8 +128,6 @@ def respond_to_mention(event, say):
         user = event.get("user", "unknown")
         print(f"Processing mention from {user}: {text}")
 
-        # Strip out the bot mention tag (e.g., "<@U0ATT8CM2P7>")
-        # so we just get the user's actual question
         import re
         question = re.sub(r"<@\w+>", "", text).strip()
 
@@ -137,24 +135,43 @@ def respond_to_mention(event, say):
             say("Hi! Ask me a question about the data in your sheet.")
             return
 
-        # Read current sheet data (real-time!)
+        print("Step 1: Reading sheet...")
         values = read_sheet_data()
         if values is None:
             say("⚠️ Couldn't read the sheet. Check permissions.")
             return
+        print(f"Step 1 OK: {len(values)} rows")
 
+        print("Step 2: Formatting data...")
         sheet_table = format_sheet_for_openai(values)
+        print(f"Step 2 OK: {len(sheet_table)} chars in table")
 
-        # Ask OpenAI with the data as context
+        print("Step 3: Calling OpenAI...")
         ai_reply = ask_openai_with_data(question, sheet_table)
-        say(ai_reply)
+        print(f"Step 3 OK: reply length = {len(ai_reply) if ai_reply else 0}")
 
-        # Log the Q&A separately
+        print("Step 4: Sending to Slack...")
+        if not ai_reply:
+            say("⚠️ OpenAI returned empty response")
+            return
+        # Slack has a 40,000 char limit per message, truncate if needed
+        if len(ai_reply) > 3000:
+            ai_reply = ai_reply[:3000] + "\n\n_(response truncated)_"
+        say(ai_reply)
+        print("Step 4 OK: replied to Slack")
+
+        print("Step 5: Logging to sheet...")
         append_to_log(user, question, ai_reply)
+        print("Step 5 OK")
 
     except Exception as e:
+        import traceback
         print(f"ERROR in respond_to_mention: {e}")
-        say(f"⚠️ Bot error: {e}")
+        print(traceback.format_exc())
+        try:
+            say(f"⚠️ Bot error: {str(e)[:200]}")
+        except Exception as say_err:
+            print(f"Even say() failed: {say_err}")
 
 
 @slack_app.event("app_mention")
