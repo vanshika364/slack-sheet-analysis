@@ -54,7 +54,7 @@ def append_to_sheet(row):
     ).execute()
 
 # ---------------- SLACK HANDLER ----------------
-@slack_app.message("")
+@slack_app.event("app_mention")
 def handle_mention(event, say):
     text = event.get("text")
     
